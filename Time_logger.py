@@ -19,7 +19,9 @@ last_day_value = delta_time_zero
 working = False
 
 def add_new_entry():
-
+	
+	time_worked = ""
+	
 	global current_ts_row
 	global last_day_row
 	global last_day
@@ -27,7 +29,7 @@ def add_new_entry():
 	global working
 	global start_time
 
-	# Get the current timestamp q1q1q1
+	# Get the current timestamp
 	timestamp_now = datetime.now()
 	today = str(timestamp_now.strftime('%Y-%m-%d'))
 	
@@ -75,7 +77,6 @@ def add_new_entry():
 			last_day = today
 			last_day_value = diff
 
-	
 		else:
 
 			write_aligned('B'+str(current_ts_row) , timestamp_now.strftime('%Y-%m-%d %H:%M:%S'))
@@ -98,7 +99,8 @@ def add_new_entry():
 			# if int(last_day_value.strftime('%H')) > 8 :
 			# 	print("you may go to sleep now ;)")
 			# else:
-			print("time worked today = " + str(last_day_value).split(".")[0])
+			time_worked = str(last_day_value).split(".")[0] 
+			print("time worked today = " + time_worked)
 			try:
 				print("time to finish = " + str(datetime.strptime("8","%H") - last_day_value).split(".")[0].split(" ")[1]) 
 			except:
@@ -106,6 +108,7 @@ def add_new_entry():
 
 	# Save the changes to the workbook 
 	wb.save(filename)
+	return time_worked
 
 # Check if the file exists
 if path.isfile(filename):
@@ -158,6 +161,7 @@ else:
 			cell.alignment = Alignment(horizontal='center')
 
 # Start the keylogger 
+toaster.show_toast("Work logger is Ready", " ", duration=1, threaded=True)
 print("ready")
 
 while True:
@@ -166,15 +170,15 @@ while True:
 
 		# Wait for a key combination to be pressed 
 		wait(r'q+1')
-
-		add_new_entry()
+	
+		time_worked = add_new_entry()
 		
-		times = 2
+		show_time = 2
 		if working:
-			toaster.show_toast("START Working hours logging", "started recording", duration=2.5*times)
+			toaster.show_toast("START WORKING", " ", duration=show_time, threaded=True)
 			print("started")
 		else:
-			toaster.show_toast("STOP Working hours logging", "stopped recording", duration=2.5*times)
+			toaster.show_toast("STOP WORKING    worked: "+time_worked, " ", duration=show_time, threaded=True)
 			print("stopped")
 			
 	except KeyboardInterrupt:
