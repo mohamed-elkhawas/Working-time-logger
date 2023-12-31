@@ -1,10 +1,11 @@
 from os import path
 from datetime import datetime
-from keyboard import wait
+from keyboard import wait, press_and_release
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Alignment
 from win10toast import ToastNotifier
 from os import system
+from time import sleep
 
 toaster = ToastNotifier()
 filename = 'work_log.xlsx'
@@ -72,6 +73,9 @@ def file_save(say_ready=False):
 		wb.save(filename)
 	except:
 		try:
+			system("start excel work_log.xlsx")
+			sleep(5)
+			press_and_release('ctrl+s')
 			system("taskkill /F /IM EXCEL.EXE")
 			wb.save(filename)
 		except:
