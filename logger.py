@@ -4,6 +4,7 @@ from keyboard import wait
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Alignment
 from win10toast import ToastNotifier
+from os import system
 
 toaster = ToastNotifier()
 filename = 'work_log.xlsx'
@@ -22,6 +23,65 @@ def write_aligned(idx, txt):
 	ws[idx] = txt
 	ws[idx].alignment = Alignment(horizontal='center')
 
+def prepare_file():
+
+	global wb
+	global ws
+	global current_ts_row
+	global last_day_row
+	global last_day
+	global last_day_value
+	# Check if the file exists
+	if path.isfile(filename):
+			
+		# load the workbook and select the active worksheet
+		wb = load_workbook(filename)
+		ws = wb.active
+
+		for i in range(2,1001):
+
+			# wait until fist empty cell 
+			try:
+				str(ws[columns_names['Start']+str(i)].value[0])
+			except:
+				current_ts_row = i
+				break
+
+		for i in range(2,1001):
+
+			if ws[columns_names['Date']+str(i)].value == None:
+				last_day_row = i -1
+				if i != 2:
+					last_day = ws[columns_names['Date']+ str(i-1)].value
+					last_day_value = ws[columns_names['Working Time']+ str(i-1)].value
+				break
+
+	else:
+
+		# If the file doesn't exist, create a new workbook and worksheet
+		wb = Workbook()
+		ws = wb.active
+
+		# Add headers to the worksheet 
+		for key, value in columns_names.items():
+			write_aligned(value+'1',key)
+			ws.column_dimensions[value].width = 23
+
+def file_save(say_ready=False):
+	try:
+		wb.save(filename)
+	except:
+		try:
+			system("taskkill /F /IM EXCEL.EXE")
+			wb.save(filename)
+		except:
+			toaster.show_toast("ERROR please close the excel file then try again", " ", duration=1, threaded=True)
+			print("close the file then try again")
+			exit(1)
+	if say_ready:
+		toaster.show_toast("Work logger is Ready", " ", duration=1, threaded=True)
+		print("ready")
+
 def add_new_entry():
 	
 	time_worked = ""
@@ -33,6 +93,7 @@ def add_new_entry():
 	global working
 	global start_time
 	global columns_names
+	global wb
 	full_date = '%Y-%m-%d %H:%M:%S'
 
 	# Get the current timestamp
@@ -116,68 +177,9 @@ def add_new_entry():
 					pass
 
 	# Save the changes to the workbook 
-	try:
-		wb.save(filename)
-	except:
-		toaster.show_toast("ERROR please close the excel file then try again", " ", duration=1, threaded=True)
-		print("close the file")
-		exit(1)
-	
+	file_save()
+ 	
 	return time_worked
-
-def prepare_file():
-
-	global wb
-	global ws
-	global current_ts_row
-	global last_day_row
-	global last_day
-	global last_day_value
-	# Check if the file exists
-	if path.isfile(filename):
-			
-		# load the workbook and select the active worksheet
-		wb = load_workbook(filename)
-		ws = wb.active
-
-		for i in range(2,1001):
-
-			# wait until fist empty cell 
-			try:
-				str(ws[columns_names['Start']+str(i)].value[0])
-			except:
-				current_ts_row = i
-				break
-
-		for i in range(2,1001):
-
-			if ws[columns_names['Date']+str(i)].value == None:
-				last_day_row = i -1
-				if i != 2:
-					last_day = ws[columns_names['Date']+ str(i-1)].value
-					last_day_value = ws[columns_names['Working Time']+ str(i-1)].value
-				break
-
-	else:
-
-		# If the file doesn't exist, create a new workbook and worksheet
-		wb = Workbook()
-		ws = wb.active
-
-		# Add headers to the worksheet 
-		for key, value in columns_names.items():
-			write_aligned(value+'1',key)
-			ws.column_dimensions[value].width = 23
-
-def check_the_file():
-	try:
-		wb.save(filename)
-		toaster.show_toast("Work logger is Ready", " ", duration=1, threaded=True)
-		print("ready")
-	except:
-		toaster.show_toast("ERROR please close the excel file then try again", " ", duration=1, threaded=True)
-		print("close the file then try again")
-		exit(1)
 
 def listen_and_run():
 	# Start the keylogger 
@@ -204,5 +206,5 @@ def listen_and_run():
 			exit()
 
 prepare_file()
-check_the_file()
+file_save(True)
 listen_and_run()
